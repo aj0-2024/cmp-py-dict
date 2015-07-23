@@ -8,6 +8,7 @@ return_dict = {
                 'deleted' : set()
               }
 """
+
 class CmpDict(object):
     """
     Compare two dictionaries and find out new, deleted and modified registers
@@ -20,7 +21,7 @@ class CmpDict(object):
 
         #input validation
         if not isinstance(old_dict, dict) or not isinstance(new_dict, dict):
-            raise TypeError('Function works with only dictionaries')
+            raise TypeError('Expecting only dictionaries')
 
         self._old_dict = old_dict
         self._new_dict = new_dict
