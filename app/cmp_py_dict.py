@@ -8,8 +8,6 @@ return_dict = {
                 'deleted' : set()
               }
 """
-from string import Template
-
 class CmpDict(object):
     """
     Compare two dictionaries and find out new, deleted and modified registers
@@ -43,7 +41,7 @@ class CmpDict(object):
         level += 1
 
         #inst the template variable
-        class Env:
+        class Env(object):
             pass
         tmp = Env()
 
