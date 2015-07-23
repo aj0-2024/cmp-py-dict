@@ -10,7 +10,6 @@ return_dict = {
 """
 from string import Template
 
-
 class CmpDict(object):
     """
     Compare two dictionaries and find out new, deleted and modified registers
@@ -27,10 +26,8 @@ class CmpDict(object):
 
         self._old_dict = old_dict
         self._new_dict = new_dict
-        self._new_template = Template('${dict_name}.${key_name}')
-        self._mod_template = Template('${dict_name}.${key_name} - [${old_val} -> ${new_val}]')
-        self._del_template = Template('${dict_name}.${key_name}')
-        self._name_template = Template('${old_name}.${new_name}')
+        self._new_tmp = self._del_tmp = self._name_tmp = '{tmp.dict_name}.{tmp.key_name}'
+        self._mod_tmp = '{tmp.dict_name}.{tmp.key_name} - [{tmp.old_val} -> {tmp.new_val}]'
         self._return_dict = {'new' : set(), 'modified' : set(), 'deleted' : set()}
 
         #parse
@@ -45,14 +42,22 @@ class CmpDict(object):
         #increment the level
         level += 1
 
+        #inst the template variable
+        class Env:
+            pass
+        tmp = Env()
+
         #iterate over old_dict keys
         for key in old_dict:
+
+            tmp.dict_name = name
+            tmp.key_name = key
 
             #find modified keys
             if key in new_dict:
                 #recursively call if values are dictionaries
                 if isinstance(old_dict[key], dict) and isinstance(new_dict[key], dict):
-                    name = self._name_template.substitute(old_name=name, new_name=key)
+                    name = self._name_tmp.format(tmp=tmp)
 
                     #yield from recursive generator
                     for key, val in self._cmp_py_dict(old_dict[key],
@@ -62,19 +67,19 @@ class CmpDict(object):
                         yield key, val
                 else:
                     if new_dict[key] != old_dict[key]:
-                        val = self._mod_template.substitute(dict_name=name,
-                                                            key_name=key,
-                                                            old_val=old_dict[key],
-                                                            new_val=new_dict[key])
-                        yield 'modified', val
+                        tmp.old_val = old_dict[key]
+                        tmp.new_val = new_dict[key]
+                        yield 'modified', self._mod_tmp.format(tmp=tmp)
             #if key is not there then its deleted
             else:
-                yield 'deleted', self._del_template.substitute(dict_name=name, key_name=key)
+                yield 'deleted', self._del_tmp.format(tmp=tmp)
 
         #iterate over new_dict keys
         for key in new_dict:
             if key not in old_dict:
-                yield 'new', self._new_template.substitute(dict_name=name, key_name=key)
+                tmp.dict_name = name
+                tmp.key_name = key
+                yield 'new', self._new_tmp.format(tmp=tmp)
 
     def _get_diffs(self, old_dict, new_dict):
         """
